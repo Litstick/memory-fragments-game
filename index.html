@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>记忆碎片 - 解密游戏</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <!-- ========== 主菜单 ========== -->
+  <div id="page-menu" class="page active">
+    <div class="menu-container">
+      <div class="menu-title-area">
+        <div class="menu-particles" id="menu-particles"></div>
+        <h1 class="menu-title">记忆碎片</h1>
+        <p class="menu-subtitle">Memory Fragments</p>
+      </div>
+      <div class="menu-buttons">
+        <button class="btn btn-primary" onclick="Game.startNew()">
+          <span class="btn-icon">✦</span> 开始新游戏
+        </button>
+        <button class="btn btn-secondary" id="btn-continue" onclick="Game.continueGame()" style="display:none;">
+          <span class="btn-icon">↻</span> 继续游戏
+        </button>
+        <button class="btn btn-secondary" onclick="Game.showPage('page-settings')">
+          <span class="btn-icon">⚙</span> 设置
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 章节选择 ========== -->
+  <div id="page-chapters" class="page">
+    <header class="page-header">
+      <button class="btn-back" onclick="Game.showPage('page-menu')">← 返回</button>
+      <h2>选择章节</h2>
+    </header>
+    <div class="chapters-grid" id="chapters-grid"></div>
+  </div>
+
+  <!-- ========== 游戏主界面（拼图+线索） ========== -->
+  <div id="page-game" class="page">
+    <header class="page-header">
+      <button class="btn-back" onclick="Game.exitToChapters()">← 返回</button>
+      <h2 id="game-chapter-title">第1章</h2>
+      <div class="header-right">
+        <button class="btn-icon-btn" onclick="Game.showCluePanel()" title="线索">🔍</button>
+      </div>
+    </header>
+    <div class="game-body">
+      <!-- 拼图区域 -->
+      <div class="puzzle-area">
+        <div class="puzzle-grid" id="puzzle-grid"></div>
+      </div>
+      <!-- 底部工具栏 -->
+      <div class="game-toolbar">
+        <div class="clue-summary" id="clue-summary">已收集线索: 0/0</div>
+        <div class="progress-bar">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+    <!-- 线索侧边栏 -->
+    <div class="clue-panel" id="clue-panel">
+      <div class="clue-panel-header">
+        <h3>线索板</h3>
+        <button class="btn-close" onclick="Game.hideCluePanel()">✕</button>
+      </div>
+      <div class="clue-list" id="clue-list"></div>
+    </div>
+  </div>
+
+  <!-- ========== 谜题弹窗 ========== -->
+  <div id="modal-puzzle" class="modal">
+    <div class="modal-content puzzle-modal">
+      <div class="modal-header">
+        <h3 id="puzzle-title">谜题</h3>
+        <button class="btn-close" onclick="Puzzle.close()">✕</button>
+      </div>
+      <div class="modal-body" id="puzzle-body"></div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="Puzzle.close()">取消</button>
+        <button class="btn btn-primary" id="puzzle-submit" onclick="Puzzle.submit()">提交答案</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 故事呈现 ========== -->
+  <div id="page-story" class="page">
+    <div class="story-container" id="story-container">
+      <!-- 信封特效 / 视频播放 / 文字呈现 -->
+    </div>
+    <div class="story-controls">
+      <button class="btn btn-primary" id="story-next-btn" onclick="Story.next()">继续</button>
+    </div>
+  </div>
+
+  <!-- ========== 设置页面 ========== -->
+  <div id="page-settings" class="page">
+    <header class="page-header">
+      <button class="btn-back" onclick="Game.showPage('page-menu')">← 返回</button>
+      <h2>游戏设置</h2>
+    </header>
+    <div class="settings-body">
+      <section class="settings-section">
+        <h3>默认图片</h3>
+        <p class="settings-desc">上传章节默认封面图片，游戏开始前可按章节单独修改</p>
+        <div class="upload-area" id="upload-default-image">
+          <div class="upload-placeholder">
+            <span class="upload-icon">📷</span>
+            <span>点击或拖拽上传图片</span>
+          </div>
+          <img id="preview-default-image" class="upload-preview" style="display:none;">
+          <input type="file" accept="image/*" id="input-default-image" style="display:none;">
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3>章节管理</h3>
+        <p class="settings-desc">添加、编辑或删除游戏章节。每个章节包含一张拼图、若干谜题和一段故事。</p>
+        <div class="chapter-list" id="settings-chapter-list"></div>
+        <button class="btn btn-primary btn-add-chapter" onclick="Settings.addChapter()">
+          + 添加章节
+        </button>
+      </section>
+
+      <section class="settings-section">
+        <h3>预置模板</h3>
+        <p class="settings-desc">使用预置的示例数据快速体验游戏</p>
+        <button class="btn btn-secondary" onclick="Settings.loadTemplate()">加载示例模板</button>
+        <button class="btn btn-secondary btn-danger" onclick="Settings.clearAll()" style="margin-left:10px;">清除所有数据</button>
+      </section>
+    </div>
+  </div>
+
+  <!-- ========== 章节编辑弹窗 ========== -->
+  <div id="modal-chapter-edit" class="modal">
+    <div class="modal-content chapter-edit-modal">
+      <div class="modal-header">
+        <h3 id="chapter-edit-title">编辑章节</h3>
+        <button class="btn-close" onclick="ChapterEdit.close()">✕</button>
+      </div>
+      <div class="modal-body chapter-edit-body">
+        <div class="form-group">
+          <label>章节标题</label>
+          <input type="text" id="edit-chapter-name" placeholder="例如：第1章 - 迷失的日记">
+        </div>
+        <div class="form-group">
+          <label>章节图片</label>
+          <div class="upload-area upload-small" id="upload-chapter-image">
+            <div class="upload-placeholder">
+              <span class="upload-icon">📷</span><span>上传图片</span>
+            </div>
+            <img id="preview-chapter-image" class="upload-preview" style="display:none;">
+            <input type="file" accept="image/*" id="input-chapter-image" style="display:none;">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>拼图网格 <span class="hint">(行×列)</span></label>
+          <div class="grid-selector">
+            <select id="edit-grid-rows"><option value="2">2行</option><option value="3" selected>3行</option><option value="4">4行</option><option value="5">5行</option></select>
+            <span>×</span>
+            <select id="edit-grid-cols"><option value="2">2列</option><option value="3" selected>3列</option><option value="4">4列</option><option value="5">5列</option></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>故事内容</label>
+          <textarea id="edit-chapter-story" rows="5" placeholder="在此输入故事内容，完成拼图后将以信件特效呈现..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>故事视频URL <span class="hint">(可选，填写后将优先播放视频)</span></label>
+          <input type="text" id="edit-chapter-video" placeholder="https://example.com/video.mp4">
+        </div>
+        <div class="form-group">
+          <label>谜题列表 <span class="hint">(点击编辑)</span></label>
+          <div class="puzzle-list" id="edit-puzzle-list"></div>
+          <button class="btn btn-secondary btn-small" onclick="ChapterEdit.addPuzzle()">+ 添加谜题</button>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="ChapterEdit.close()">取消</button>
+        <button class="btn btn-primary" onclick="ChapterEdit.save()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 谜题编辑弹窗 ========== -->
+  <div id="modal-puzzle-edit" class="modal">
+    <div class="modal-content puzzle-edit-modal">
+      <div class="modal-header">
+        <h3 id="puzzle-edit-title">编辑谜题</h3>
+        <button class="btn-close" onclick="PuzzleEdit.close()">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>谜题类型</label>
+          <select id="edit-puzzle-type">
+            <option value="text">文字问答</option>
+            <option value="password">密码破解</option>
+            <option value="cipher">凯撒密码</option>
+            <option value="reverse">倒序文字</option>
+            <option value="riddle">谜语</option>
+            <option value="math">数学题</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>谜题题目</label>
+          <textarea id="edit-puzzle-question" rows="3" placeholder="输入谜题内容..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>正确答案</label>
+          <input type="text" id="edit-puzzle-answer" placeholder="正确答案（不区分大小写）">
+        </div>
+        <div class="form-group">
+          <label>提示 <span class="hint">(可选)</span></label>
+          <textarea id="edit-puzzle-hint" rows="2" placeholder="给玩家的提示信息..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>关联拼图块编号 <span class="hint">(从1开始)</span></label>
+          <input type="number" id="edit-puzzle-piece" min="1" placeholder="1">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="PuzzleEdit.close()">取消</button>
+        <button class="btn btn-primary" onclick="PuzzleEdit.save()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========== 提示消息 ========== -->
+  <div id="toast" class="toast"></div>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/puzzle-types.js"></script>
+<script src="js/settings.js"></script>
+<script src="js/chapter-edit.js"></script>
+<script src="js/puzzle-edit.js"></script>
+<script src="js/game.js"></script>
+<script src="js/puzzle.js"></script>
+<script src="js/story.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
