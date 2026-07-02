@@ -89,8 +89,9 @@ const Puzzle = {
       document.getElementById('puzzle-submit').disabled = true;
 
       setTimeout(() => {
+        const pieceNum = this.currentPiece;
         this.close();
-        Game.unlockPiece(this.currentPiece);
+        Game.unlockPiece(pieceNum);
         Utils.showToast('拼图块已解锁！', 'success');
       }, 1500);
     } else {

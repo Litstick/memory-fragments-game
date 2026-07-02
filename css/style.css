@@ -271,11 +271,11 @@ html, body {
 }
 .puzzle-grid {
   display: grid;
-  gap: 3px;
-  background: rgba(42,58,92,0.3);
-  border: 2px solid var(--color-border);
+  gap: 6px;
+  background: rgba(42,58,92,0.2);
+  border: 1px solid var(--color-border);
   border-radius: var(--radius);
-  padding: 3px;
+  padding: 8px;
   width: fit-content;
   height: fit-content;
   max-width: 100%;
@@ -283,54 +283,75 @@ html, body {
 }
 .puzzle-piece {
   position: relative;
-  border-radius: 4px;
+  border-radius: 8px;
   overflow: hidden;
   cursor: pointer;
   transition: all var(--transition);
   aspect-ratio: 1;
   min-width: 60px;
   min-height: 60px;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.06),
+    0 2px 6px rgba(0,0,0,0.35),
+    0 0 0 2px var(--color-bg);
 }
 .puzzle-piece-inner {
   width: 100%; height: 100%;
   background-size: cover;
   background-position: center;
-  transition: all 0.5s ease;
+  transition: filter 0.6s ease, transform 0.5s ease;
 }
 .puzzle-piece.locked .puzzle-piece-inner {
-  filter: blur(8px) brightness(0.4);
+  filter: blur(10px) brightness(0.35) saturate(0.3);
 }
 .puzzle-piece.unlocked .puzzle-piece-inner {
   filter: none;
+  transform: scale(1.02);
 }
 .puzzle-piece.locked::after {
   content: '?';
   position: absolute; top:50%; left:50%;
   transform: translate(-50%,-50%);
-  font-size: 28px; font-weight: 800;
+  font-size: 26px; font-weight: 800;
   color: var(--color-primary-light);
   text-shadow: 0 0 20px rgba(108,92,231,0.6);
   animation: puzzleGlow 2s infinite ease-in-out;
+  pointer-events: none;
 }
 @keyframes puzzleGlow {
-  0%,100% { opacity:0.7; text-shadow: 0 0 20px rgba(108,92,231,0.4); }
-  50% { opacity:1; text-shadow: 0 0 30px rgba(108,92,231,0.8); }
+  0%,100% { opacity:0.6; text-shadow: 0 0 20px rgba(108,92,231,0.4); }
+  50% { opacity:1; text-shadow: 0 0 35px rgba(108,92,231,0.9); }
 }
 .puzzle-piece.unlocked::after {
-  content: '';
+  content: none;
 }
 .puzzle-piece:hover {
-  transform: scale(1.03);
+  transform: scale(1.05);
   z-index: 2;
+  box-shadow:
+    inset 0 0 0 1px rgba(255,255,255,0.1),
+    0 4px 16px rgba(0,0,0,0.5),
+    0 0 0 2px var(--color-bg);
 }
 .puzzle-piece.just-unlocked {
-  animation: unlockPop 0.6s ease;
+  animation: unlockPop 0.7s ease;
 }
 @keyframes unlockPop {
   0% { transform: scale(1); }
-  30% { transform: scale(1.1); }
-  60% { transform: scale(0.95); }
+  25% { transform: scale(1.12); }
+  50% { transform: scale(0.95); }
+  75% { transform: scale(1.04); }
   100% { transform: scale(1); }
+}
+.puzzle-piece.highlight-pulse {
+  animation: highlightPulse 2s ease;
+  z-index: 10;
+}
+@keyframes highlightPulse {
+  0%,100% { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06), 0 2px 6px rgba(0,0,0,0.35), 0 0 0 2px var(--color-bg); }
+  25% { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2), 0 0 0 4px var(--color-accent), 0 4px 20px rgba(0,206,201,0.5); }
+  50% { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1), 0 0 0 4px var(--color-accent), 0 4px 20px rgba(0,206,201,0.5); }
+  75% { box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2), 0 0 0 4px var(--color-accent), 0 4px 20px rgba(0,206,201,0.5); }
 }
 
 .game-toolbar {

@@ -4,13 +4,10 @@ const Game = {
   currentPage: 'page-menu',
 
   init() {
-    // 检查是否有存档
     this.checkSaveData();
-    // 创建菜单粒子
     Utils.createParticles('menu-particles', 25);
   },
 
-  // 检查存档
   checkSaveData() {
     const state = Storage.getGameState();
     const btn = document.getElementById('btn-continue');
@@ -21,7 +18,6 @@ const Game = {
     }
   },
 
-  // 页面切换
   showPage(pageId) {
     const pages = document.querySelectorAll('.page');
     pages.forEach(p => {
@@ -40,7 +36,6 @@ const Game = {
     }
   },
 
-  // 开始新游戏
   startNew() {
     const chapters = Storage.getChapters();
     if (chapters.length === 0) {
@@ -51,7 +46,6 @@ const Game = {
     this.showPage('page-chapters');
   },
 
-  // 继续游戏
   continueGame() {
     const chapters = Storage.getChapters();
     if (chapters.length === 0) {
@@ -61,7 +55,6 @@ const Game = {
     this.showPage('page-chapters');
   },
 
-  // 渲染章节网格
   renderChapterGrid() {
     const grid = document.getElementById('chapters-grid');
     const chapters = Storage.getChapters();
@@ -110,7 +103,6 @@ const Game = {
     return unlocked.length;
   },
 
-  // 进入章节
   enterChapter(index) {
     this.currentChapter = index;
     const chapters = Storage.getChapters();
@@ -119,19 +111,16 @@ const Game = {
     document.getElementById('game-chapter-title').textContent = ch.name || `第${index + 1}章`;
     this.showPage('page-game');
     this.hideCluePanel();
-    // 延迟渲染，确保页面布局完成
     requestAnimationFrame(() => {
       this.renderPuzzleGrid();
     });
   },
 
-  // 退出到章节选择
   exitToChapters() {
     this.autoSave();
     this.showPage('page-chapters');
   },
 
-  // 渲染拼图网格
   renderPuzzleGrid() {
     const chapters = Storage.getChapters();
     const ch = chapters[this.currentChapter];
@@ -146,23 +135,20 @@ const Game = {
     grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
     grid.style.gridTemplateRows = `repeat(${rows}, 1fr)`;
 
-    // 计算合适的拼图尺寸
     const puzzleArea = document.querySelector('.puzzle-area');
     const areaW = puzzleArea.clientWidth - 40;
     const areaH = puzzleArea.clientHeight - 20;
     const maxPieceSize = Math.min(
-      Math.floor((areaW - (cols - 1) * 3 - 6) / cols),
-      Math.floor((areaH - (rows - 1) * 3 - 6) / rows)
+      Math.floor((areaW - (cols - 1) * 6 - 6) / cols),
+      Math.floor((areaH - (rows - 1) * 6 - 6) / rows)
     );
     const pieceSize = Math.max(Math.min(maxPieceSize, 120), 60);
 
-    // 设置 grid 明确尺寸，确保 1fr 能正确分配
-    grid.style.width = (pieceSize * cols + (cols - 1) * 3 + 6) + 'px';
-    grid.style.height = (pieceSize * rows + (rows - 1) * 3 + 6) + 'px';
+    grid.style.width = (pieceSize * cols + (cols - 1) * 6 + 6) + 'px';
+    grid.style.height = (pieceSize * rows + (rows - 1) * 6 + 6) + 'px';
 
     grid.innerHTML = '';
 
-    // 加载图片
     const imgSrc = ch.image || '';
     if (imgSrc) {
       const img = new Image();
@@ -173,7 +159,6 @@ const Game = {
         }
       };
       img.onerror = () => {
-        // 图片加载失败，显示占位
         for (let i = 0; i < totalPieces; i++) {
           const piece = this.createPlaceholderPiece(i, unlocked.includes(i + 1));
           grid.appendChild(piece);
@@ -195,7 +180,6 @@ const Game = {
     piece.className = 'puzzle-piece ' + (isUnlocked ? 'unlocked' : 'locked');
     piece.dataset.index = index + 1;
 
-    // 计算该拼图块对应的图片区域
     const row = Math.floor(index / cols);
     const col = index % cols;
     const bgX = cols > 1 ? (col / (cols - 1)) * 100 : 0;
@@ -209,9 +193,12 @@ const Game = {
 
     piece.appendChild(inner);
 
-    if (!isUnlocked) {
-      piece.addEventListener('click', () => Puzzle.open(index + 1));
-    }
+    // 统一事件绑定：始终绑定，内部判断状态
+    piece.addEventListener('click', () => {
+      if (!piece.classList.contains('unlocked')) {
+        Puzzle.open(index + 1);
+      }
+    });
 
     return piece;
   },
@@ -231,14 +218,16 @@ const Game = {
 
     piece.appendChild(inner);
 
-    if (!isUnlocked) {
-      piece.addEventListener('click', () => Puzzle.open(index + 1));
-    }
+    // 统一事件绑定：始终绑定，内部判断状态
+    piece.addEventListener('click', () => {
+      if (!piece.classList.contains('unlocked')) {
+        Puzzle.open(index + 1);
+      }
+    });
 
     return piece;
   },
 
-  // 解锁拼图块
   unlockPiece(pieceNum) {
     const chapters = Storage.getChapters();
     const ch = chapters[this.currentChapter];
@@ -250,17 +239,15 @@ const Game = {
       Storage.updateChapterProgress(this.currentChapter, unlocked);
     }
 
-    // 更新视觉
     const pieces = document.querySelectorAll('.puzzle-piece');
     pieces.forEach(piece => {
       if (parseInt(piece.dataset.index) === pieceNum) {
+        // 直接修改类，不需要克隆替换
         piece.classList.remove('locked');
         piece.classList.add('unlocked', 'just-unlocked');
-        // 移除点击事件
-        piece.replaceWith(piece.cloneNode(true));
-        const newPiece = document.querySelector(`.puzzle-piece[data-index="${pieceNum}"]`);
+        piece.style.cursor = 'default';
         setTimeout(() => {
-          if (newPiece) newPiece.classList.remove('just-unlocked');
+          piece.classList.remove('just-unlocked');
         }, 600);
       }
     });
@@ -268,7 +255,6 @@ const Game = {
     this.updateProgress();
     this.renderClueList();
 
-    // 检查是否全部解锁
     if (unlocked.length >= totalPieces) {
       Storage.markChapterComplete(this.currentChapter);
       setTimeout(() => {
@@ -277,7 +263,6 @@ const Game = {
     }
   },
 
-  // 更新进度
   updateProgress() {
     const chapters = Storage.getChapters();
     const ch = chapters[this.currentChapter];
@@ -293,18 +278,26 @@ const Game = {
     this.renderClueList();
   },
 
-  // 显示线索面板
   showCluePanel() {
     this.renderClueList();
     document.getElementById('clue-panel').classList.add('open');
   },
 
-  // 隐藏线索面板
   hideCluePanel() {
     document.getElementById('clue-panel').classList.remove('open');
   },
 
-  // 渲染线索列表
+  // 高亮拼图块（用于线索板点击跳转）
+  highlightPiece(pieceNum) {
+    const pieces = document.querySelectorAll('.puzzle-piece');
+    pieces.forEach(piece => {
+      if (parseInt(piece.dataset.index) === pieceNum) {
+        piece.classList.add('highlight-pulse');
+        setTimeout(() => piece.classList.remove('highlight-pulse'), 2000);
+      }
+    });
+  },
+
   renderClueList() {
     const list = document.getElementById('clue-list');
     const chapters = Storage.getChapters();
@@ -318,6 +311,17 @@ const Game = {
       const isFound = unlocked.includes(puzzle.piece);
       const item = document.createElement('div');
       item.className = 'clue-item' + (isFound ? ' found' : '');
+
+      // 线索板点击功能
+      if (!isFound) {
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', () => {
+          this.hideCluePanel();
+          this.highlightPiece(puzzle.piece);
+          Utils.showToast(`点击拼图块 #${puzzle.piece} 来解开这个谜题`, 'info');
+        });
+      }
+
       item.innerHTML = `
         <div class="clue-item-label">线索 #${puzzle.piece}</div>
         <div class="clue-item-text ${isFound ? '' : 'unknown'}">${isFound ? puzzle.question : '??? 未发现'}</div>
@@ -326,7 +330,6 @@ const Game = {
     });
   },
 
-  // 自动保存
   autoSave() {
     // 进度在每次解锁时已自动保存
   }
