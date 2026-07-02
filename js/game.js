@@ -118,8 +118,11 @@ const Game = {
 
     document.getElementById('game-chapter-title').textContent = ch.name || `第${index + 1}章`;
     this.showPage('page-game');
-    this.renderPuzzleGrid();
     this.hideCluePanel();
+    // 延迟渲染，确保页面布局完成
+    requestAnimationFrame(() => {
+      this.renderPuzzleGrid();
+    });
   },
 
   // 退出到章节选择
@@ -151,7 +154,11 @@ const Game = {
       Math.floor((areaW - (cols - 1) * 3 - 6) / cols),
       Math.floor((areaH - (rows - 1) * 3 - 6) / rows)
     );
-    const pieceSize = Math.min(maxPieceSize, 120);
+    const pieceSize = Math.max(Math.min(maxPieceSize, 120), 60);
+
+    // 设置 grid 明确尺寸，确保 1fr 能正确分配
+    grid.style.width = (pieceSize * cols + (cols - 1) * 3 + 6) + 'px';
+    grid.style.height = (pieceSize * rows + (rows - 1) * 3 + 6) + 'px';
 
     grid.innerHTML = '';
 
